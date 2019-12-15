@@ -9,17 +9,16 @@
 #include "Vector3.h"
 #include "CircularBuffer.h"
 #include "time_utils.h"
-
+   
+// 定义一些基础的雷达扫描和IMU相关的函数和变量，在BasicScanRegistration类中进行整合
 namespace loam
 {
-
-
 
   /** \brief A pair describing the start end end index of a range. */
   typedef std::pair<size_t, size_t> IndexRange;
 
 
-
+// 特征点的说明参数  
   /** Point label options. */
   enum PointLabel
   {
@@ -29,7 +28,7 @@ namespace loam
     SURFACE_FLAT = -1       ///< flat surface point
   };
 
-
+// 扫描注册过程中的配置参数
   /** Scan Registration configuration parameters. */
   class RegistrationParams
   {
@@ -72,7 +71,7 @@ namespace loam
   };
 
 
-
+// IMU 的状态参数变量
   /** IMU state data. */
   typedef struct IMUState
   {
@@ -131,7 +130,7 @@ namespace loam
     };
   } IMUState;
 
-
+// 扫描注册中函数与变量的定义，RegistrationParams是其中一部分，也包括了其他的以上定义的函数变量以及PCL库中的函数变量
   class BasicScanRegistration
   {
   public:

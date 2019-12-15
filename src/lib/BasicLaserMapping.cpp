@@ -29,7 +29,7 @@
 // This is an implementation of the algorithm described in the following paper:
 //   J. Zhang and S. Singh. LOAM: Lidar Odometry and Mapping in Real-time.
 //     Robotics: Science and Systems Conference (RSS). Berkeley, CA, July 2014.
-
+  
 
 #include "loam_velodyne/BasicLaserMapping.h"
 #include "loam_velodyne/nanoflann_pcl.h"
@@ -99,10 +99,12 @@ BasicLaserMapping::BasicLaserMapping(const float& scanPeriod, const size_t& maxI
    _downSizeFilterSurf.setLeafSize(0.4, 0.4, 0.4);
 }
 
-
+// 转换与地图关联
 void BasicLaserMapping::transformAssociateToMap()
 {
+    // 位置增量
    _transformIncre.pos = _transformBefMapped.pos - _transformSum.pos;
+    // 姿态变化
    rotateYXZ(_transformIncre.pos, -(_transformSum.rot_y), -(_transformSum.rot_x), -(_transformSum.rot_z));
 
    float sbcx = _transformSum.rot_x.sin();
@@ -167,7 +169,7 @@ void BasicLaserMapping::transformAssociateToMap()
 }
 
 
-
+// 更新状态
 void BasicLaserMapping::transformUpdate()
 {
    if (0 < _imuHistory.size())
@@ -202,13 +204,14 @@ void BasicLaserMapping::transformUpdate()
    _transformAftMapped = _transformTobeMapped;
 }
 
-
-
+// 点云和地图关联
+// point in  和  point out 
 void BasicLaserMapping::pointAssociateToMap(const pcl::PointXYZI& pi, pcl::PointXYZI& po)
 {
    po.x = pi.x;
    po.y = pi.y;
    po.z = pi.z;
+   // 由激光得到的点云数据，包含激光反射强度这一属性，强度信息与目标的表面材质、粗糙度、入射角方向，以及仪器的发射能量，激光波长有关
    po.intensity = pi.intensity;
 
    rotateZXY(po, _transformTobeMapped.rot_z, _transformTobeMapped.rot_x, _transformTobeMapped.rot_y);
@@ -231,7 +234,7 @@ void BasicLaserMapping::pointAssociateTobeMapped(const pcl::PointXYZI& pi, pcl::
 }
 
 
-
+// 
 void BasicLaserMapping::transformFullResToMap()
 {
    // transform full resolution input cloud to map
@@ -263,6 +266,7 @@ bool BasicLaserMapping::createDownsizedMap()
    return true;
 }
 
+// 主要函数，process,实现mapping的主要功能
 bool BasicLaserMapping::process(Time const& laserOdometryTime)
 {
    // skip some frames?!?
@@ -603,7 +607,7 @@ void BasicLaserMapping::updateIMU(IMUState2 const& newState)
 {
    _imuHistory.push(newState);
 }
-
+// 更新里程计
 void BasicLaserMapping::updateOdometry(double pitch, double yaw, double roll, double x, double y, double z)
 {
    _transformSum.rot_x = pitch;
@@ -623,6 +627,7 @@ void BasicLaserMapping::updateOdometry(Twist const& twist)
 nanoflann::KdTreeFLANN<pcl::PointXYZI> kdtreeCornerFromMap;
 nanoflann::KdTreeFLANN<pcl::PointXYZI> kdtreeSurfFromMap;
 
+// 优化过程，重要的部分
 void BasicLaserMapping::optimizeTransformTobeMapped()
 {
    if (_laserCloudCornerFromMap->size() <= 10 || _laserCloudSurfFromMap->size() <= 100)

@@ -8,7 +8,10 @@
     <param name="scanPeriod" value="$(arg scanPeriod)" />
 
     <remap from="/multi_scan_points" to="/velodyne_points" />
+    <remap from="/multi_scan_points" to="/robot1/points2" />
+
     <remap from="/imu/data" to="/raw_imu" />
+    
     <!-- <remap from="/imu/data" to="/djiros/imu" />   -->
   </node>
 

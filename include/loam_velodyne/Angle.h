@@ -5,7 +5,7 @@
 #include <cmath>
 #include <math.h>
 
-
+// 定义一些与角度转换有关的函数，方便后面多线雷达的映射
 namespace loam {
 
 

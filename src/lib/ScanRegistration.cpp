@@ -34,14 +34,15 @@
 #include "math_utils.h"
 
 #include <tf/transform_datatypes.h>
-
-
+  
+// ScanRegistration.h继承BasicScanRegistration类，定义Loam算法的基础类，将各种传感器得来的点云化成一个规定形式，这里主要是定义一些输入输出和处理函数,与ROS建立联系  
+// ScanRegistration.cpp这里就是将各种信息作为ROS消息发布出来
 namespace loam {
 
 
-
+// 从ros参数服务器中查看参数配置状况是否良好
 bool ScanRegistration::parseParams(const ros::NodeHandle& nh, RegistrationParams& config_out) 
-{
+{  
   bool success = true;
   int iParam = 0;
   float fParam = 0;
@@ -139,15 +140,17 @@ bool ScanRegistration::parseParams(const ros::NodeHandle& nh, RegistrationParams
 
   return success;
 }
-
+// ROS消息订阅和发布的相关设置
 bool ScanRegistration::setupROS(ros::NodeHandle& node, ros::NodeHandle& privateNode, RegistrationParams& config_out)
 {
   if (!parseParams(privateNode, config_out))
     return false;
 
+// 订阅IMU数据消息
   // subscribe to IMU topic
   _subImu = node.subscribe<sensor_msgs::Imu>("/imu/data", 50, &ScanRegistration::handleIMUMessage, this);
 
+// 登记发布话题
   // advertise scan registration topics
   _pubLaserCloud            = node.advertise<sensor_msgs::PointCloud2>("/velodyne_cloud_2", 2);
   _pubCornerPointsSharp     = node.advertise<sensor_msgs::PointCloud2>("/laser_cloud_sharp", 2);
@@ -160,9 +163,10 @@ bool ScanRegistration::setupROS(ros::NodeHandle& node, ros::NodeHandle& privateN
 }
 
 
-
+// 处理IMU数据
 void ScanRegistration::handleIMUMessage(const sensor_msgs::Imu::ConstPtr& imuIn)
 {
+  // 将IMU数据从四元数转化到矩阵形式
   tf::Quaternion orientation;
   tf::quaternionMsgToTF(imuIn->orientation, orientation);
   double roll, pitch, yaw;
@@ -183,7 +187,7 @@ void ScanRegistration::handleIMUMessage(const sensor_msgs::Imu::ConstPtr& imuIn)
   updateIMUData(acc, newState);
 }
 
-
+// 消息发布的结果
 void ScanRegistration::publishResult()
 {
   auto sweepStartTime = toROSTime(sweepStart());

@@ -32,7 +32,7 @@
 
 #ifndef LOAM_TRANSFORMMAINTENANCE_H
 #define LOAM_TRANSFORMMAINTENANCE_H
-
+ 
 
 #include <ros/node_handle.h>
 #include <nav_msgs/Odometry.h>
@@ -40,6 +40,7 @@
 
 #include "loam_velodyne/BasicTransformMaintenance.h"
 
+// 继承 BasicTransformMaintenance ，在此基础上定义与ROS相关的一些操作，完成消息的订阅与发布
 namespace loam {
 
 /** \brief Implementation of the LOAM transformation maintenance component.
@@ -56,12 +57,13 @@ public:
    */
   virtual bool setup(ros::NodeHandle& node, ros::NodeHandle& privateNode);
 
+// 雷达消息的处理函数
   /** \brief Handler method for laser odometry messages.
    *
    * @param laserOdometry the new laser odometry
    */
   void laserOdometryHandler(const nav_msgs::Odometry::ConstPtr& laserOdometry);
-
+// 地图里程计的处理函数
   /** \brief Handler method for mapping odometry messages.
    *
    * @param odomAftMapped the new mapping odometry
@@ -69,14 +71,14 @@ public:
   void odomAftMappedHandler(const nav_msgs::Odometry::ConstPtr& odomAftMapped);
 
 private:
-  nav_msgs::Odometry _laserOdometry2;         ///< latest integrated laser odometry message
-  tf::StampedTransform _laserOdometryTrans2;  ///< latest integrated laser odometry transformation
+  nav_msgs::Odometry _laserOdometry2;         ///< latest integrated laser odometry message，最新的集成的里程计消息
+  tf::StampedTransform _laserOdometryTrans2;  ///< latest integrated laser odometry transformation，最新的集成的里程计位姿变换
 
-  ros::Publisher _pubLaserOdometry2;          ///< integrated laser odometry publisher
-  tf::TransformBroadcaster _tfBroadcaster2;   ///< integrated laser odometry transformation broadcaster
+  ros::Publisher _pubLaserOdometry2;          ///< integrated laser odometry publisher 集成的雷达里程计发布函数
+  tf::TransformBroadcaster _tfBroadcaster2;   ///< integrated laser odometry transformation broadcaster 变换关系发布，通过tf进行发布
 
-  ros::Subscriber _subLaserOdometry;    ///< (high frequency) laser odometry subscriber
-  ros::Subscriber _subOdomAftMapped;    ///< (low frequency) mapping odometry subscriber
+  ros::Subscriber _subLaserOdometry;    ///< (high frequency) laser odometry subscriber 订阅里程计节点的消息，高频的
+  ros::Subscriber _subOdomAftMapped;    ///< (low frequency) mapping odometry subscriber 订阅mapping节点的消息，低频的
 };
 
 } // end namespace loam

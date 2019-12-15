@@ -32,7 +32,7 @@
 
 #include "loam_velodyne/LaserMapping.h"
 #include "loam_velodyne/common.h"
-
+  
 namespace loam
 {
 
@@ -46,7 +46,7 @@ LaserMapping::LaserMapping(const float& scanPeriod, const size_t& maxIterations)
    _aftMappedTrans.child_frame_id_ = "/aft_mapped";
 }
 
-
+// 老规矩，setup函数建立在ros中运行所需要的行为，检查必要的参数是否正常，设置订阅的话题和要发布的话题
 bool LaserMapping::setup(ros::NodeHandle& node, ros::NodeHandle& privateNode)
 {
    // fetch laser mapping params
@@ -176,7 +176,7 @@ bool LaserMapping::setup(ros::NodeHandle& node, ros::NodeHandle& privateNode)
 }
 
 
-
+// 处理新来的边缘信息
 void LaserMapping::laserCloudCornerLastHandler(const sensor_msgs::PointCloud2ConstPtr& cornerPointsLastMsg)
 {
    _timeLaserCloudCornerLast = cornerPointsLastMsg->header.stamp;
@@ -184,7 +184,7 @@ void LaserMapping::laserCloudCornerLastHandler(const sensor_msgs::PointCloud2Con
    pcl::fromROSMsg(*cornerPointsLastMsg, laserCloudCornerLast());
    _newLaserCloudCornerLast = true;
 }
-
+// 处理新来的平面信息
 void LaserMapping::laserCloudSurfLastHandler(const sensor_msgs::PointCloud2ConstPtr& surfacePointsLastMsg)
 {
    _timeLaserCloudSurfLast = surfacePointsLastMsg->header.stamp;
@@ -192,7 +192,7 @@ void LaserMapping::laserCloudSurfLastHandler(const sensor_msgs::PointCloud2Const
    pcl::fromROSMsg(*surfacePointsLastMsg, laserCloudSurfLast());
    _newLaserCloudSurfLast = true;
 }
-
+// 处理雷达点云新的fullresolution
 void LaserMapping::laserCloudFullResHandler(const sensor_msgs::PointCloud2ConstPtr& laserCloudFullResMsg)
 {
    _timeLaserCloudFullRes = laserCloudFullResMsg->header.stamp;
@@ -200,7 +200,7 @@ void LaserMapping::laserCloudFullResHandler(const sensor_msgs::PointCloud2ConstP
    pcl::fromROSMsg(*laserCloudFullResMsg, laserCloud());
    _newLaserCloudFullRes = true;
 }
-
+// 对于雷达里程计数据的处理
 void LaserMapping::laserOdometryHandler(const nav_msgs::Odometry::ConstPtr& laserOdometry)
 {
    _timeLaserOdometry = laserOdometry->header.stamp;
@@ -216,7 +216,7 @@ void LaserMapping::laserOdometryHandler(const nav_msgs::Odometry::ConstPtr& lase
 
    _newLaserOdometry = true;
 }
-
+// IMU数据的处理
 void LaserMapping::imuHandler(const sensor_msgs::Imu::ConstPtr& imuIn)
 {
    double roll, pitch, yaw;
@@ -225,7 +225,7 @@ void LaserMapping::imuHandler(const sensor_msgs::Imu::ConstPtr& imuIn)
    tf::Matrix3x3(orientation).getRPY(roll, pitch, yaw);
    updateIMU({ fromROSTime(imuIn->header.stamp) , roll, pitch });
 }
-
+// 循环处理建图的过程
 void LaserMapping::spin()
 {
    ros::Rate rate(100);
@@ -242,7 +242,7 @@ void LaserMapping::spin()
       rate.sleep();
    }
 }
-
+// 重置
 void LaserMapping::reset()
 {
    _newLaserCloudCornerLast = false;
@@ -251,6 +251,7 @@ void LaserMapping::reset()
    _newLaserOdometry = false;
 }
 
+// 判断是否有新的数据
 bool LaserMapping::hasNewData()
 {
    return _newLaserCloudCornerLast && _newLaserCloudSurfLast &&
@@ -260,6 +261,7 @@ bool LaserMapping::hasNewData()
       fabs((_timeLaserCloudFullRes - _timeLaserOdometry).toSec()) < 0.005;
 }
 
+// process处理ｍａｐｐｉｎｇ的过程，主要工作在BasicLaserMapping::process中已经实现
 void LaserMapping::process()
 {
    if (!hasNewData())// waiting for new data to arrive...
@@ -272,7 +274,7 @@ void LaserMapping::process()
 
    publishResult();
 }
-
+// 发布结果
 void LaserMapping::publishResult()
 {
    // publish new map cloud according to the input output ratio

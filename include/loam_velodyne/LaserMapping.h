@@ -29,7 +29,7 @@
 // This is an implementation of the algorithm described in the following paper:
 //   J. Zhang and S. Singh. LOAM: Lidar Odometry and Mapping in Real-time.
 //     Robotics: Science and Systems Conference (RSS). Berkeley, CA, July 2014.
-
+  
 #ifndef LOAM_LASERMAPPING_H
 #define LOAM_LASERMAPPING_H
 
@@ -45,7 +45,7 @@
 #include <tf/transform_broadcaster.h>
 
 
-
+// 继承BasicLaserMapping，在基本功能的基础上，实现在ros中的运行所需的部分
 namespace loam
 {
 /** \brief Implementation of the LOAM laser mapping component.

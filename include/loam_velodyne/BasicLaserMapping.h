@@ -30,7 +30,7 @@
 // This is an implementation of the algorithm described in the following paper:
 //   J. Zhang and S. Singh. LOAM: Lidar Odometry and Mapping in Real-time.
 //     Robotics: Science and Systems Conference (RSS). Berkeley, CA, July 2014.
-
+  
 
 #include "Twist.h"
 #include "CircularBuffer.h"
@@ -40,9 +40,11 @@
 #include <pcl/point_types.h>
 #include <pcl/filters/voxel_grid.h>
 
+// 定义BasicLaserMapping类，主要是完成点与地图的关联，位姿转换与地图的关联，地图建立的处理等
 namespace loam
 {
 
+// IMU 数据格式
 /** IMU state data. */
 typedef struct IMUState2
 {
@@ -55,6 +57,7 @@ typedef struct IMUState2
    /** The current pitch angle. */
    Angle pitch;
 
+// IMU插值
    /** \brief Interpolate between two IMU states.
     *
     * @param start the first IMU state

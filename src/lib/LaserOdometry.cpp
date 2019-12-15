@@ -29,7 +29,7 @@
 // This is an implementation of the algorithm described in the following paper:
 //   J. Zhang and S. Singh. LOAM: Lidar Odometry and Mapping in Real-time.
 //     Robotics: Science and Systems Conference (RSS). Berkeley, CA, July 2014.
-
+  
 #include <pcl/filters/filter.h>
 
 #include "loam_velodyne/LaserOdometry.h"
@@ -60,13 +60,13 @@ namespace loam
     _laserOdometryTrans.child_frame_id_ = "/laser_odom";
   }
 
-
+// 框架与注册节点那部分相似，也是用setup函数进行ROS这部分的设置，检查各参数的情况，设置订阅和发布消息的函数
   bool LaserOdometry::setup(ros::NodeHandle &node, ros::NodeHandle &privateNode)
   {
     // fetch laser odometry params
     float fParam;
     int iParam;
-
+// 检查scanPeriod参数的情况
     if (privateNode.getParam("scanPeriod", fParam))
     {
       if (fParam <= 0)
@@ -80,7 +80,7 @@ namespace loam
         ROS_INFO("Set scanPeriod: %g", fParam);
       }
     }
-
+// 检查ioRatio参数
     if (privateNode.getParam("ioRatio", iParam))
     {
       if (iParam < 1)
@@ -136,13 +136,14 @@ namespace loam
         ROS_INFO("Set deltaRAbort: %g", fParam);
       }
     }
-
+// 等级里程计节点要发布的话题
     // advertise laser odometry topics
     _pubLaserCloudCornerLast = node.advertise<sensor_msgs::PointCloud2>("/laser_cloud_corner_last", 2);
     _pubLaserCloudSurfLast = node.advertise<sensor_msgs::PointCloud2>("/laser_cloud_surf_last", 2);
     _pubLaserCloudFullRes = node.advertise<sensor_msgs::PointCloud2>("/velodyne_cloud_3", 2);
     _pubLaserOdometry = node.advertise<nav_msgs::Odometry>("/laser_odom_to_init", 5);
 
+// 订阅桑一个节点，即registration节点的话题，主要是特征点，用于运动估计的姿态变换
     // subscribe to scan registration topics
     _subCornerPointsSharp = node.subscribe<sensor_msgs::PointCloud2>
       ("/laser_cloud_sharp", 2, &LaserOdometry::laserCloudSharpHandler, this);
@@ -164,7 +165,7 @@ namespace loam
 
     return true;
   }
-
+// 重置函数
   void LaserOdometry::reset()
   {
     _newCornerPointsSharp = false;
@@ -175,6 +176,7 @@ namespace loam
     _newImuTrans = false;
   }
 
+// 处理边缘点
   void LaserOdometry::laserCloudSharpHandler(const sensor_msgs::PointCloud2ConstPtr& cornerPointsSharpMsg)
   {
     _timeCornerPointsSharp = cornerPointsSharpMsg->header.stamp;
@@ -187,7 +189,7 @@ namespace loam
   }
 
 
-
+// 处理次边缘点
   void LaserOdometry::laserCloudLessSharpHandler(const sensor_msgs::PointCloud2ConstPtr& cornerPointsLessSharpMsg)
   {
     _timeCornerPointsLessSharp = cornerPointsLessSharpMsg->header.stamp;
@@ -200,7 +202,7 @@ namespace loam
   }
 
 
-
+ // 处理平面点
   void LaserOdometry::laserCloudFlatHandler(const sensor_msgs::PointCloud2ConstPtr& surfPointsFlatMsg)
   {
     _timeSurfPointsFlat = surfPointsFlatMsg->header.stamp;
@@ -213,7 +215,7 @@ namespace loam
   }
 
 
-
+// 处理次边缘点
   void LaserOdometry::laserCloudLessFlatHandler(const sensor_msgs::PointCloud2ConstPtr& surfPointsLessFlatMsg)
   {
     _timeSurfPointsLessFlat = surfPointsLessFlatMsg->header.stamp;
@@ -226,7 +228,7 @@ namespace loam
   }
 
 
-
+// 处理新的full reslution数据
   void LaserOdometry::laserCloudFullResHandler(const sensor_msgs::PointCloud2ConstPtr& laserCloudFullResMsg)
   {
     _timeLaserCloudFullRes = laserCloudFullResMsg->header.stamp;
@@ -239,7 +241,7 @@ namespace loam
   }
 
 
-
+// imu位姿转换的处理
   void LaserOdometry::imuTransHandler(const sensor_msgs::PointCloud2ConstPtr& imuTransMsg)
   {
     _timeImuTrans = imuTransMsg->header.stamp;
@@ -250,7 +252,7 @@ namespace loam
     _newImuTrans = true;
   }
 
-
+// 循环处理雷达发来的数据
   void LaserOdometry::spin()
   {
     ros::Rate rate(100);
@@ -269,7 +271,7 @@ namespace loam
     }
   }
 
-
+// 是否有新的数据
   bool LaserOdometry::hasNewData()
   {
     return _newCornerPointsSharp && _newCornerPointsLessSharp && _newSurfPointsFlat &&
@@ -282,7 +284,7 @@ namespace loam
   }
 
 
-
+// 在BasicLaserOdometry::process的基础上添加一些处理，主要进行工作的部分
   void LaserOdometry::process()
   {
     if (!hasNewData())
@@ -293,7 +295,7 @@ namespace loam
     publishResult();
   }
 
-
+// 在节点里通过话题把odometry处理的结果发布出去
   void LaserOdometry::publishResult()
   {
     // publish odometry transformations

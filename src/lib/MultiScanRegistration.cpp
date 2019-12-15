@@ -35,8 +35,8 @@
 
 #include <pcl_conversions/pcl_conversions.h>
 
-
-namespace loam {
+  
+namespace loam {  
 
 MultiScanMapper::MultiScanMapper(const float& lowerBound,
                                  const float& upperBound,
@@ -49,6 +49,7 @@ MultiScanMapper::MultiScanMapper(const float& lowerBound,
 
 }
 
+// 设置映射的参数
 void MultiScanMapper::set(const float &lowerBound,
                           const float &upperBound,
                           const uint16_t &nScanRings)
@@ -60,7 +61,7 @@ void MultiScanMapper::set(const float &lowerBound,
 }
 
 
-
+// 从俯仰角度获得扫描环ID
 int MultiScanMapper::getRingForAngle(const float& angle) {
   return int(((angle * 180 / M_PI) - _lowerBound) * _factor + 0.5);
 }
@@ -75,7 +76,7 @@ MultiScanRegistration::MultiScanRegistration(const MultiScanMapper& scanMapper)
 {};
 
 
-
+// 在setupROS的基础上把config配置参数也进行设置
 bool MultiScanRegistration::setup(ros::NodeHandle& node, ros::NodeHandle& privateNode)
 {
   RegistrationParams config;
@@ -86,6 +87,7 @@ bool MultiScanRegistration::setup(ros::NodeHandle& node, ros::NodeHandle& privat
   return true;
 }
 
+// 重写的setupROS，在ScanRegistration::setupROS的基础上检查多线雷达类型，激光角度等配置参数是否正常
 bool MultiScanRegistration::setupROS(ros::NodeHandle& node, ros::NodeHandle& privateNode, RegistrationParams& config_out)
 {
   if (!ScanRegistration::setupROS(node, privateNode, config_out))
@@ -121,7 +123,7 @@ bool MultiScanRegistration::setupROS(ros::NodeHandle& node, ros::NodeHandle& pri
       if (vAngleMin >= vAngleMax) {
         ROS_ERROR("Invalid vertical range (min >= max)");
         return false;
-      } else if (nScanRings < 2) {
+      } else if (nScanRings < 2) {  
         ROS_ERROR("Invalid number of scan rings (n < 2)");
         return false;
       }
@@ -130,7 +132,7 @@ bool MultiScanRegistration::setupROS(ros::NodeHandle& node, ros::NodeHandle& pri
       ROS_INFO("Set linear scan mapper from %g to %g degrees with %d scan rings.", vAngleMin, vAngleMax, nScanRings);
     }
   }
-
+// 订阅点云话题
   // subscribe to input cloud topic
   _subLaserCloud = node.subscribe<sensor_msgs::PointCloud2>
       ("/multi_scan_points", 2, &MultiScanRegistration::handleCloudMessage, this);
@@ -139,7 +141,7 @@ bool MultiScanRegistration::setupROS(ros::NodeHandle& node, ros::NodeHandle& pri
 }
 
 
-
+// 处理点云消息
 void MultiScanRegistration::handleCloudMessage(const sensor_msgs::PointCloud2ConstPtr &laserCloudMsg)
 {
   if (_systemDelay > 0) 
@@ -152,6 +154,7 @@ void MultiScanRegistration::handleCloudMessage(const sensor_msgs::PointCloud2Con
   pcl::PointCloud<pcl::PointXYZ> laserCloudIn;
   pcl::fromROSMsg(*laserCloudMsg, laserCloudIn);
 
+// 调用process函数进行具体的处理，process函数在下面紧接着的一段写着
   process(laserCloudIn, fromROSTime(laserCloudMsg->header.stamp));
 }
 
@@ -161,6 +164,7 @@ void MultiScanRegistration::process(const pcl::PointCloud<pcl::PointXYZ>& laserC
 {
   size_t cloudSize = laserCloudIn.size();
 
+// 确定扫描的开始和结束的方向角度
   // determine scan start and end orientations
   float startOri = -std::atan2(laserCloudIn[0].y, laserCloudIn[0].x);
   float endOri = -std::atan2(laserCloudIn[cloudSize - 1].y,
@@ -182,7 +186,7 @@ void MultiScanRegistration::process(const pcl::PointCloud<pcl::PointXYZ>& laserC
     point.x = laserCloudIn[i].y;
     point.y = laserCloudIn[i].z;
     point.z = laserCloudIn[i].x;
-
+// 下面两段跳过一些不良的点
     // skip NaN and INF valued points
     if (!pcl_isfinite(point.x) ||
         !pcl_isfinite(point.y) ||
@@ -194,14 +198,17 @@ void MultiScanRegistration::process(const pcl::PointCloud<pcl::PointXYZ>& laserC
     if (point.x * point.x + point.y * point.y + point.z * point.z < 0.0001) {
       continue;
     }
-
+// 从下面这段推测，y轴是与激光雷达转轴重合的轴
+// 计算垂直点的角度和扫描环ID     
     // calculate vertical point angle and scan ID
+    // 计算y与xz平面的夹角
     float angle = std::atan(point.y / std::sqrt(point.x * point.x + point.z * point.z));
+    // 计算ID
     int scanID = _scanMapper.getRingForAngle(angle);
     if (scanID >= _scanMapper.getNumberOfScanRings() || scanID < 0 ){
       continue;
     }
-
+// 计算水平点的角度
     // calculate horizontal point angle
     float ori = -std::atan2(point.x, point.z);
     if (!halfPassed) {
@@ -224,6 +231,7 @@ void MultiScanRegistration::process(const pcl::PointCloud<pcl::PointXYZ>& laserC
       }
     }
 
+// 计算与起始点的关联时间
     // calculate relative scan time based on point orientation
     float relTime = config().scanPeriod * (ori - startOri) / (endOri - startOri);
     point.intensity = scanID + relTime;

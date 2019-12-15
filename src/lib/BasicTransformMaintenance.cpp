@@ -36,13 +36,13 @@
 
 namespace loam
 {
-
+  
 using std::sin;
 using std::cos;
 using std::asin;
 using std::atan2;
 
-
+// 更新里程计，用的是里程计节点发来的消息
 void BasicTransformMaintenance::updateOdometry(double pitch, double yaw, double roll, double x, double y, double z)
 {
    _transformSum[0] = pitch;
@@ -52,7 +52,7 @@ void BasicTransformMaintenance::updateOdometry(double pitch, double yaw, double 
    _transformSum[4] = y;
    _transformSum[5] = z;
 }
-
+// 更新地图节点发来的消息
 void BasicTransformMaintenance::updateMappingTransform(double pitch, double yaw, double roll, double x, double y, double z, double twist_rot_x, double twist_rot_y, double twist_rot_z, double twist_pos_x, double twist_pos_y, double twist_pos_z)
 {
    _transformAftMapped[0] = pitch;
@@ -71,7 +71,7 @@ void BasicTransformMaintenance::updateMappingTransform(double pitch, double yaw,
    _transformBefMapped[4] = twist_pos_y;
    _transformBefMapped[5] = twist_pos_z;
 }
-
+// 将上面函数变形处理一下，重载
 void BasicTransformMaintenance::updateMappingTransform(Twist const& transformAftMapped, Twist const& transformBefMapped)
 {
    updateMappingTransform( transformAftMapped.rot_x.rad(), transformAftMapped.rot_y.rad(), transformAftMapped.rot_z.rad(), 
@@ -79,7 +79,7 @@ void BasicTransformMaintenance::updateMappingTransform(Twist const& transformAft
                            transformBefMapped.rot_x.rad(), transformBefMapped.rot_y.rad(), transformBefMapped.rot_z.rad(),
                            transformBefMapped.pos.x(), transformBefMapped.pos.y(), transformBefMapped.pos.z());
 }
-
+// 位姿变换关系与地图进行关联
 void BasicTransformMaintenance::transformAssociateToMap()
 {
    float x1 = cos(_transformSum[1]) * (_transformBefMapped[3] - _transformSum[3])

@@ -39,6 +39,7 @@
 #include <pcl/point_types.h>
 #include "time_utils.h"
 
+// 定义一些基础的通用的部分，模板T在circularbuffer.h中使用
 namespace loam {
 
 /** \brief Construct a new point cloud message from the specified information and publish it via the given publisher.

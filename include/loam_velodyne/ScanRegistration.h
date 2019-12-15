@@ -42,8 +42,9 @@
 #include <sensor_msgs/Imu.h>
 
 #include "BasicScanRegistration.h"
-
-
+    
+// 继承BasicScanRegistration类，定义Loam算法的基础类，将各种传感器得来的点云化成一个规定形式，做法就是利用ROS的消息传递，这里主要是定义一些输入输出和处理函数  
+// 与ROS建立联系
 namespace loam
 {
   /** \brief Base class for LOAM scan registration implementations.
@@ -62,7 +63,7 @@ namespace loam
      * @param privateNode the private ROS node handle
      */
     virtual bool setupROS(ros::NodeHandle& node, ros::NodeHandle& privateNode, RegistrationParams& config_out);
-
+// 处理IMU数据
     /** \brief Handler method for IMU messages.
      *
      * @param imuIn the new IMU message

@@ -6,7 +6,7 @@
 
 namespace loam
 {
-
+  
   /** \brief Implementation of the LOAM laser odometry component.
    *
    */

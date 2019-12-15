@@ -2,10 +2,11 @@
 
 #include "loam_velodyne/BasicScanRegistration.h"
 #include "math_utils.h"
-
+// BasicScanRegistration.h定义一些基础的雷达扫描和IMU相关的函数和变量，在BasicScanRegistration类中进行整合
+// BasicScanRegistration.cpp对BasicScanRegistration.h中定义的一些函数的实现
 namespace loam
 {
-
+  
 RegistrationParams::RegistrationParams(const float& scanPeriod_,
                                        const int& imuHistorySize_,
                                        const int& nFeatureRegions_,
@@ -25,6 +26,7 @@ RegistrationParams::RegistrationParams(const float& scanPeriod_,
       surfaceCurvatureThreshold(surfaceCurvatureThreshold_)
 {};
 
+// 处理每次Scan的数据，包括与IMU的时间进行对齐，提取特征点，更新IMU转换坐标等 
 void BasicScanRegistration::processScanlines(const Time& scanTime, std::vector<pcl::PointCloud<pcl::PointXYZI>> const& laserCloudScans)
 {
   // reset internal buffers and set IMU start state based on current scan time
@@ -44,14 +46,14 @@ void BasicScanRegistration::processScanlines(const Time& scanTime, std::vector<p
   extractFeatures();
   updateIMUTransform();
 }
-
+// 将配置参数写入程序变量
 bool BasicScanRegistration::configure(const RegistrationParams& config)
 {
   _config = config;
   _imuHistory.ensureCapacity(_config.imuHistorySize);
   return true;
 }
-
+// 重置
 void BasicScanRegistration::reset(const Time& scanTime)
 {
   _scanTime = scanTime;
@@ -62,6 +64,7 @@ void BasicScanRegistration::reset(const Time& scanTime)
     interpolateIMUStateFor(0, _imuStart);
   }
 
+// 在一次sweep开始时，清空内部点云缓存，sweep开始时间替换为本次sweep开始时间
   // clear internal cloud buffers at the beginning of a sweep
   if (true/*newSweep*/) {
     _sweepStart = scanTime;
@@ -78,7 +81,7 @@ void BasicScanRegistration::reset(const Time& scanTime)
   }
 }
 
-
+// 更新IMU数据，将IMU中的数据格式进行转换，以便后面在算法中使用
 void BasicScanRegistration::updateIMUData(Vector3& acc, IMUState& newState)
 {
   if (_imuHistory.size() > 0) {
@@ -97,7 +100,7 @@ void BasicScanRegistration::updateIMUData(Vector3& acc, IMUState& newState)
   _imuHistory.push(newState);
 }
 
-
+// 将点投影到本次sweep开始时间，使用IMU数据进行运动模型的估计，这里应该是将激光雷达的数据也转化为IMU的格式再进行运动的估计
 void BasicScanRegistration::projectPointToStartOfSweep(pcl::PointXYZI& point, float relTime)
 {
   // project point to the start of the sweep using corresponding IMU data
@@ -108,7 +111,7 @@ void BasicScanRegistration::projectPointToStartOfSweep(pcl::PointXYZI& point, fl
   }
 }
 
-
+  
 void BasicScanRegistration::setIMUTransformFor(const float& relTime)
 {
   interpolateIMUStateFor(relTime, _imuCur);
@@ -118,7 +121,7 @@ void BasicScanRegistration::setIMUTransformFor(const float& relTime)
 }
 
 
-
+// 输入点云，投影到本次sweep开始时间
 void BasicScanRegistration::transformToStartIMU(pcl::PointXYZI& point)
 {
   // rotate point to global IMU system
@@ -134,7 +137,7 @@ void BasicScanRegistration::transformToStartIMU(pcl::PointXYZI& point)
 }
 
 
-
+// 在给定的时间插入IMU的状态 reltime为关联时间，参见BasicScanRegistration.h
 void BasicScanRegistration::interpolateIMUStateFor(const float &relTime, IMUState &outputState)
 {
   double timeDiff = toSec(_scanTime - _imuHistory[_imuIdx].stamp) + relTime;
@@ -151,16 +154,19 @@ void BasicScanRegistration::interpolateIMUStateFor(const float &relTime, IMUStat
   }
 }
 
-
+// 特征点提取
 void BasicScanRegistration::extractFeatures(const uint16_t& beginIdx)
 {
+// 从单个scan中提取特征点
   // extract features from individual scans
+// _scanIndices是起始Scan和结束Scan之间的索引集合
   size_t nScans = _scanIndices.size();
   for (size_t i = beginIdx; i < nScans; i++) {
     pcl::PointCloud<pcl::PointXYZI>::Ptr surfPointsLessFlatScan(new pcl::PointCloud<pcl::PointXYZI>);
     size_t scanStartIdx = _scanIndices[i].first;
     size_t scanEndIdx = _scanIndices[i].second;
 
+// 跳过空的scan
     // skip empty scans
     if (scanEndIdx <= scanStartIdx + 2 * _config.curvatureRegion) {
       continue;
@@ -186,15 +192,15 @@ void BasicScanRegistration::extractFeatures(const uint16_t& beginIdx)
       if (ep <= sp) {
         continue;
       }
-
+//  图像regions的大小
       size_t regionSize = ep - sp + 1;
-
+//  将图像regions内从sp到ep之间的区域清空
       // reset region buffers
       setRegionBuffersFor(sp, ep);
 
-
+//  边缘点提取
       // extract corner features
-      int largestPickedNum = 0;
+      int largestPickedNum = 0; // 最多可提取的特征点数
       for (size_t k = regionSize; k > 0 && largestPickedNum < _config.maxCornerLessSharp;) {
         size_t idx = _regionSortIndices[--k];
         size_t scanIdx = idx - scanStartIdx;
@@ -215,7 +221,7 @@ void BasicScanRegistration::extractFeatures(const uint16_t& beginIdx)
           markAsPicked(idx, scanIdx);
         }
       }
-
+// 平面特征点提取
       // extract flat surface features
       int smallestPickedNum = 0;
       for (int k = 0; k < regionSize && smallestPickedNum < _config.maxSurfaceFlat; k++) {
@@ -254,7 +260,7 @@ void BasicScanRegistration::extractFeatures(const uint16_t& beginIdx)
 }
 
 
-
+// 更新IMU从起始时刻到当前时刻的位置与速度估计变换
 void BasicScanRegistration::updateIMUTransform()
 {
   _imuTrans[0].x = _imuStart.pitch.rad();
@@ -280,15 +286,17 @@ void BasicScanRegistration::updateIMUTransform()
   _imuTrans[3].z = imuVelocityFromStart.z();
 }
 
-
+// 重新设定region
 void BasicScanRegistration::setRegionBuffersFor(const size_t& startIdx, const size_t& endIdx)
 {
+  // 重设大小
   // resize buffers
   size_t regionSize = endIdx - startIdx + 1;
   _regionCurvature.resize(regionSize);
   _regionSortIndices.resize(regionSize);
   _regionLabel.assign(regionSize, SURFACE_LESS_FLAT);
 
+// 计算曲率
   // calculate point curvatures and reset sort indices
   float pointWeight = -2 * _config.curvatureRegion;
 
@@ -306,7 +314,7 @@ void BasicScanRegistration::setRegionBuffersFor(const size_t& startIdx, const si
     _regionCurvature[regionIdx] = diffX * diffX + diffY * diffY + diffZ * diffZ;
     _regionSortIndices[regionIdx] = i;
   }
-
+// 按曲率进行排序
   // sort point curvatures
   for (size_t i = 1; i < regionSize; i++) {
     for (size_t j = i; j >= 1; j--) {
@@ -324,6 +332,7 @@ void BasicScanRegistration::setScanBuffersFor(const size_t& startIdx, const size
   size_t scanSize = endIdx - startIdx + 1;
   _scanNeighborPicked.assign(scanSize, 0);
 
+// 标记不可信任的点
   // mark unreliable points as picked
   for (size_t i = startIdx + _config.curvatureRegion; i < endIdx - _config.curvatureRegion; i++) {
     const pcl::PointXYZI& previousPoint = (_laserCloud[i - 1]);
@@ -363,7 +372,7 @@ void BasicScanRegistration::setScanBuffersFor(const size_t& startIdx, const size
 }
 
 
-
+// 标记可信任的点
 void BasicScanRegistration::markAsPicked(const size_t& cloudIdx, const size_t& scanIdx)
 {
   _scanNeighborPicked[scanIdx] = 1;

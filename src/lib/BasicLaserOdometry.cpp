@@ -36,7 +36,7 @@ BasicLaserOdometry::BasicLaserOdometry(float scanPeriod, size_t maxIterations) :
 {}
 
 
-
+// 转化到sweep起始时刻的坐标
 void BasicLaserOdometry::transformToStart(const pcl::PointXYZI& pi, pcl::PointXYZI& po)
 {
    float s = (1.f / _scanPeriod) * (pi.intensity - int(pi.intensity));
@@ -53,7 +53,7 @@ void BasicLaserOdometry::transformToStart(const pcl::PointXYZI& pi, pcl::PointXY
 }
 
 
-
+// 转化到结束时刻的坐标
 size_t BasicLaserOdometry::transformToEnd(pcl::PointCloud<pcl::PointXYZI>::Ptr& cloud)
 {
    size_t cloudSize = cloud->points.size();
@@ -87,7 +87,7 @@ size_t BasicLaserOdometry::transformToEnd(pcl::PointCloud<pcl::PointXYZI>::Ptr& 
 }
 
 
-
+// 对IMU的信息进行转换处理
 void BasicLaserOdometry::pluginIMURotation(const Angle& bcx, const Angle& bcy, const Angle& bcz,
                                            const Angle& blx, const Angle& bly, const Angle& blz,
                                            const Angle& alx, const Angle& aly, const Angle& alz,
@@ -151,7 +151,7 @@ void BasicLaserOdometry::pluginIMURotation(const Angle& bcx, const Angle& bcy, c
 }
 
 
-
+// 加速度信息的转换处理
 void BasicLaserOdometry::accumulateRotation(Angle cx, Angle cy, Angle cz,
                                             Angle lx, Angle ly, Angle lz,
                                             Angle &ox, Angle &oy, Angle &oz)
@@ -178,6 +178,7 @@ void BasicLaserOdometry::accumulateRotation(Angle cx, Angle cy, Angle cz,
    oz = atan2(srzcrx / ox.cos(), crzcrx / ox.cos());
 }
 
+// 更新IMU的信息
 void BasicLaserOdometry::updateIMU(pcl::PointCloud<pcl::PointXYZ> const& imuTrans)
 {
    assert(4 == imuTrans.size());
@@ -193,8 +194,10 @@ void BasicLaserOdometry::updateIMU(pcl::PointCloud<pcl::PointXYZ> const& imuTran
    _imuVeloFromStart = imuTrans.points[3];
 }
 
+// 重点函数，处理函数
 void BasicLaserOdometry::process()
 {
+// 系统初始化，点云输入 
    if (!_systemInited)
    {
       _cornerPointsLessSharp.swap(_lastCornerCloud);
@@ -212,6 +215,7 @@ void BasicLaserOdometry::process()
 
    pcl::PointXYZI coeff;
    bool isDegenerate = false;
+// Eigen 使得C++可以进行矩阵运算
    Eigen::Matrix<float, 6, 6> matP;
 
    _frameCount++;
@@ -296,7 +300,7 @@ void BasicLaserOdometry::process()
                      }
                   }
                }
-
+  
                _pointSearchCornerInd1[i] = closestPointInd;
                _pointSearchCornerInd2[i] = minPointInd2;
             }

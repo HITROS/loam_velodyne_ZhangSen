@@ -1,14 +1,3 @@
-# loam_velodyne
-
-![Screenshot](/capture.bmp)
-Sample map built from [nsh_indoor_outdoor.bag](http://www.frc.ri.cmu.edu/~jizhang03/Datasets/nsh_indoor_outdoor.bag) (opened with [ccViewer](http://www.danielgm.net/cc/))
-
-:white_check_mark: Tested with ROS Indigo and Velodyne VLP16. [(Screencast)](https://youtu.be/o1cLXY-Es54)
-
-All sources were taken from [ROS documentation](http://docs.ros.org/indigo/api/loam_velodyne/html/files.html)
-
-Ask questions [here](https://github.com/laboshinl/loam_velodyne/issues/3).
-
 ## How to build with catkin
 
 ```
@@ -34,21 +23,14 @@ Or read from velodyne [VLP16 sample pcap](https://midas3.kitware.com/midas/folde
 ```
 roslaunch velodyne_pointcloud VLP16_points.launch pcap:="$HOME/Downloads/velodyne.pcap"
 ```
+## 本周工作
+```
+阅读并注释代码loam代码。
 
-## Troubleshooting
+代码面向的是多线激光雷达，可以添加IMU，也可以不添加IMU
 
-### `multiScanRegistration` crashes right after playing bag file
+代码结构与论文保持一致，分为四个部分，点云注册、里程计、建图、集成四个节点通过消息传递进行联系。代码基于ROS编写，使用C++语言，风格面向对象，各种变量和函数在相应的类中进行定义，层次清晰.每个节点内代码结构基本一致，分为三层----节点启动层、中间层、基础功能层。节点启动部分保持简洁的代码，主要功能在基础功能层（/lib中Basic—文件）中实现，进而中间层（ScanRegistration、LaserOdometry、LaserMapping、TransformMaitenance等文件）在其基础上添加与ROS运行相关的功能，发布订阅消息，完成消息回调。
 
-Issues [#71](https://github.com/laboshinl/loam_velodyne/issues/71) and
-[#7](https://github.com/laboshinl/loam_velodyne/issues/7) address this
-problem. The current known solution is to build the same version of PCL that
-you have on your system from source, and set the `CMAKE_PREFIX_PATH`
-accordingly so that catkin can find it. See [this
-issue](https://github.com/laboshinl/loam_velodyne/issues/71#issuecomment-416024816)
-for more details.
+在每个节点中，由中间层setup函数设置节点运行的整体状况，由基础功能层的process函数完成节点核心任务。
 
-
----
-[Quantifying Aerial LiDAR Accuracy of LOAM for Civil Engineering Applications.](https://ceen.et.byu.edu/sites/default/files/snrprojects/wolfe_derek.pdf) Derek Anthony Wolfe
-
-[ROS & Loam_velodyne](https://ishiguro440.wordpress.com/2016/04/05/%E5%82%99%E5%BF%98%E9%8C%B2%E3%80%80ros-loam_velodyne/) 
+```

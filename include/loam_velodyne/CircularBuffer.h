@@ -7,7 +7,7 @@
 
 namespace loam {
 
-
+// 存储数据的类，模板T在common.h中定义
 
 /** \brief Simple circular buffer implementation for storing data history.
  *

@@ -35,7 +35,7 @@
 
 namespace loam
 {
-
+ 
 /** \brief Implementation of the LOAM transformation maintenance component.
  *
  */
@@ -50,16 +50,16 @@ public:
       double twist_pos_x, double twist_pos_y, double twist_pos_z);
 
    void transformAssociateToMap();
-
+// 存储结果
    // result accessor
    auto const& transformMapped() const { return _transformMapped; }
 
 private:
-   float _transformSum[6]{};
+   float _transformSum[6]{};// 定义数组，用来存放里程计传来的消息
    float _transformIncre[6]{};
    float _transformMapped[6]{};
-   float _transformBefMapped[6]{};
-   float _transformAftMapped[6]{};
+   float _transformBefMapped[6]{};// 定义数字，用来存放未经Mapping节点处理，twist发来的控制消息
+   float _transformAftMapped[6]{};// 定义数组，用来存放经Mapping节点处理过的地图消息
 };
 
 } // end namespace loam

@@ -29,7 +29,7 @@
 // This is an implementation of the algorithm described in the following paper:
 //   J. Zhang and S. Singh. LOAM: Lidar Odometry and Mapping in Real-time.
 //     Robotics: Science and Systems Conference (RSS). Berkeley, CA, July 2014.
-
+  
 #ifndef LOAM_LASERODOMETRY_H
 #define LOAM_LASERODOMETRY_H
 

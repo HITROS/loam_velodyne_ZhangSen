@@ -42,12 +42,13 @@
 namespace loam {
 
 
-
+// 从垂直点角度到扫描环的线性映射    
 /** \brief Class realizing a linear mapping from vertical point angle to the corresponding scan ring.
  *
  */
 class MultiScanMapper {
 public:
+  // velodyne16线雷达线之间的角度间隔2°，边界为上下15度，16线
   /** \brief Construct a new multi scan mapper instance.
    *
    * @param lowerBound - the lower vertical bound (degrees)
@@ -62,6 +63,7 @@ public:
   const float& getUpperBound() { return _upperBound; }
   const uint16_t& getNumberOfScanRings() { return _nScanRings; }
 
+// 设置映射的参数
   /** \brief Set mapping parameters.
    *
    * @param lowerBound - the lower vertical bound (degrees)
@@ -77,6 +79,7 @@ public:
    * @param angle the vertical point angle (in rad)
    * @return the ring ID
    */
+   // 从俯仰角度得到扫描环ID
   int getRingForAngle(const float& angle);
 
   /** Multi scan mapper for Velodyne VLP-16 according to data sheet. */
@@ -97,7 +100,7 @@ private:
 };
 
 
-
+// 注册从多线雷达得到的点云信息，初始化时使用MultiScanMapper，即从垂直点角度到扫描环的线性映射 
 /** \brief Class for registering point clouds received from multi-laser lidars.
  *
  */
@@ -108,6 +111,7 @@ public:
 
   bool setup(ros::NodeHandle& node, ros::NodeHandle& privateNode);
 
+// 处理输入的点云信息
   /** \brief Handler method for input cloud messages.
    *
    * @param laserCloudMsg the new input cloud message to process
@@ -115,6 +119,7 @@ public:
   void handleCloudMessage(const sensor_msgs::PointCloud2ConstPtr &laserCloudMsg);
 
 private:
+// override 重写的setupROS,ROS消息订阅和发布的相关设置
   /** \brief Setup component in active mode.
    *
    * @param node the ROS node handle
@@ -122,6 +127,7 @@ private:
    */
   bool setupROS(ros::NodeHandle& node, ros::NodeHandle& privateNode, RegistrationParams& config_out) override;
 
+// 处理一帧新输入的点云
   /** \brief Process a new input cloud.
    *
    * @param laserCloudIn the new input cloud to process
