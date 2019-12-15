@@ -25,7 +25,7 @@ roslaunch velodyne_pointcloud VLP16_points.launch pcap:="$HOME/Downloads/velodyn
 ```
 ## 本周工作
 ```
-阅读并注释代码loam代码。
+阅读并注释代码loam代码。/src、/src/lib、/include/loam_velodyne 内为主要代码
 
 代码面向的是多线激光雷达，可以添加IMU，也可以不添加IMU
 
